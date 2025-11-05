@@ -64,7 +64,10 @@
                     <td>${item.semester}</td>
                     <td>${item.status}</td>
                     <td><a href="${fileLink}" target="_blank" rel="noopener">${item.filePath}</a></td>
-                    <td><button class="send-email-btn" data-id="${item.id}">Send to Email</button></td>
+                    <td>
+                        <button class="send-email-btn" data-id="${item.id}">Send to Email</button>
+                        <button class="delete-btn" data-id="${item.id}" style="margin-left:8px;color:#fff;background:#e74c3c;border:none;padding:6px 8px;border-radius:6px;">Delete</button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -73,6 +76,27 @@
             Array.from(document.querySelectorAll('.send-email-btn')).forEach(btn => {
                 btn.addEventListener('click', function() {
                     showEmailModal(this.getAttribute('data-id'));
+                });
+            });
+            // Delete listeners
+            Array.from(document.querySelectorAll('.delete-btn')).forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const id = this.getAttribute('data-id');
+                    if (!confirm('Are you sure you want to delete paper ID ' + id + '?')) return;
+                    try {
+                        const resp = await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
+                        const txt = await resp.text();
+                        if (resp.ok) {
+                            toast('Deleted');
+                            renderAllPapers();
+                        } else {
+                            toast('Delete failed');
+                            console.error('Delete failed', resp.status, txt);
+                        }
+                    } catch (err) {
+                        console.error('Delete request failed', err);
+                        toast('Network error');
+                    }
                 });
             });
         } catch (err) {
