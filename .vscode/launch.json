@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch QPMS",
+            "request": "launch",
+            "mainClass": "LaunchQPMS",
+            "projectName": "Question Paper Managment System",
+            "env": {
+                "SMTP_USER": "ghadgesoham2006@gmail.com",
+                "SMTP_PASS": "xjhvnwmhgynhqbfq"
+            }
+        }
+    ]
+}
