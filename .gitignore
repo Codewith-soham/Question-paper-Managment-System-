@@ -26,5 +26,11 @@ bin/
 ### VS Code ###
 .vscode/
 
+# Ignore compiled Java classes
+**/*.class
+
+# Ignore jars that may be placed under src/lib during builds
+src/lib/
+
 ### Mac OS ###
 .DS_Store
