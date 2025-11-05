@@ -80,13 +80,30 @@ public class WebServer {
             if ("GET".equals(exchange.getRequestMethod())) {
                 try {
                     String path = exchange.getRequestURI().getPath().substring("/frontend".length());
-                    if (path.isEmpty() || path.equals("/")) {
-                        path = "/index.html";
+                    if (path.isEmpty() || path.equals("/")) path = "/index.html";
+
+                    // Try multiple candidate frontend locations so server works
+                    // whether started from project root or from src/
+                    String[] candidates = new String[] {"frontend", "../frontend", "./frontend"};
+                    File file = null;
+                    for (String base : candidates) {
+                        File f = new File(base + path);
+                        if (f.exists() && f.isFile()) {
+                            file = f;
+                            break;
+                        }
                     }
-                    
-                    File file = new File("frontend" + path);
-                    if (!file.exists()) {
+
+                    // Final fallback: check absolute path or project-root style
+                    if (file == null) {
+                        File f = new File(System.getProperty("user.dir") + File.separator + "frontend" + path);
+                        if (f.exists() && f.isFile()) file = f;
+                    }
+
+                    if (file == null) {
                         String response = "404 Not Found";
+                        System.out.println("[WebServer] Static file not found for path: " + path);
+                        System.out.println("[WebServer] Tried frontend locations: frontend, ../frontend, ./frontend, and user.dir/frontend");
                         exchange.sendResponseHeaders(404, response.length());
                         try (OutputStream os = exchange.getResponseBody()) {
                             os.write(response.getBytes());
@@ -103,7 +120,6 @@ public class WebServer {
 
                     exchange.getResponseHeaders().set("Content-Type", contentType);
                     exchange.sendResponseHeaders(200, file.length());
-                    
                     try (FileInputStream fs = new FileInputStream(file);
                          OutputStream os = exchange.getResponseBody()) {
                         byte[] buffer = new byte[4096];

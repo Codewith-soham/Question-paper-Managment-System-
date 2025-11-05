@@ -144,26 +144,41 @@ public class EmailService {
             return file;
         }
         
-        // Try relative to PDF folder (from current working directory)
-        File pdfDirFile = new File(PDF_BASE_DIR, cleanFileName);
-        if (pdfDirFile.exists()) {
-            System.out.println("   ✓ Found at: " + pdfDirFile.getAbsolutePath());
-            return pdfDirFile;
+        // Candidate locations to search for PDFs (handles running from src/ or project root)
+        String userDir = System.getProperty("user.dir");
+        String projectRoot = null;
+        try {
+            // If running from src/, parent is project root
+            File ud = new File(userDir);
+            File parent = ud.getParentFile();
+            if (parent != null) projectRoot = parent.getAbsolutePath();
+        } catch (Exception ex) {
+            projectRoot = null;
         }
-        
-        // Try with workspace path (project root)
-        String workspacePath = System.getProperty("user.dir");
-        File workspacePdfFile = new File(workspacePath, PDF_BASE_DIR + File.separator + cleanFileName);
-        if (workspacePdfFile.exists()) {
-            System.out.println("   ✓ Found at: " + workspacePdfFile.getAbsolutePath());
-            return workspacePdfFile;
+
+        String[] candidates;
+        if (projectRoot != null) {
+            candidates = new String[] {
+                PDF_BASE_DIR + File.separator + cleanFileName,
+                "." + File.separator + PDF_BASE_DIR + File.separator + cleanFileName,
+                projectRoot + File.separator + PDF_BASE_DIR + File.separator + cleanFileName,
+                userDir + File.separator + PDF_BASE_DIR + File.separator + cleanFileName,
+                ".." + File.separator + PDF_BASE_DIR + File.separator + cleanFileName
+            };
+        } else {
+            candidates = new String[] {
+                PDF_BASE_DIR + File.separator + cleanFileName,
+                "." + File.separator + PDF_BASE_DIR + File.separator + cleanFileName,
+                userDir + File.separator + PDF_BASE_DIR + File.separator + cleanFileName
+            };
         }
-        
-        // Try uppercase PDF folder (case-insensitive search)
-        File pdfDirUpper = new File(PDF_BASE_DIR.toUpperCase(), cleanFileName);
-        if (pdfDirUpper.exists()) {
-            System.out.println("   ✓ Found at: " + pdfDirUpper.getAbsolutePath());
-            return pdfDirUpper;
+
+        for (String p : candidates) {
+            File f = new File(p);
+            if (f.exists()) {
+                System.out.println("   ✓ Found at: " + f.getAbsolutePath());
+                return f;
+            }
         }
         
         // List available PDFs for debugging
@@ -178,12 +193,13 @@ public class EmailService {
             }
         }
         
-        System.out.println("   ❌ File not found. Tried:");
-        System.out.println("      - " + pdfDirFile.getAbsolutePath());
-        System.out.println("      - " + workspacePdfFile.getAbsolutePath());
-        
-        // Return the first attempt (so error message shows what was tried)
-        return pdfDirFile;
+        System.out.println("   ❌ File not found. Tried these candidate paths:");
+        for (String p : candidates) {
+            System.out.println("      - " + p);
+        }
+
+        // Return a non-existing file object from the first candidate so caller sees attempted path
+        return new File(candidates.length > 0 ? candidates[0] : (PDF_BASE_DIR + File.separator + cleanFileName));
     }
     
     /**
