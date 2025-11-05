@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Question Paper</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="app-header">
+    <div class="app-header__inner container">
+        <h1 class="app-title">Search Question Papers</h1>
+        <nav class="app-nav">
+            <a class="nav-link" href="index.html">Dashboard</a>
+            <a class="nav-link" href="add.html">Add</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container">
+    <section class="section">
+        <h2>Filters</h2>
+        <form id="searchPaperForm" class="form-grid" autocomplete="off">
+            <div class="form-field">
+                <label>Subject</label>
+                <input type="text" name="subject" placeholder="e.g., Maths" required>
+            </div>
+            <div class="form-field">
+                <label>Year</label>
+                <input type="number" name="year" placeholder="e.g., 2019" required min="1900" max="2100">
+            </div>
+            <div class="form-field">
+                <label>Semester</label>
+                <input type="number" name="semester" placeholder="e.g., 3" required min="1" max="10">
+            </div>
+            <div class="form-actions">
+                <button type="reset" class="btn btn-secondary">Clear</button>
+                <button type="submit" class="btn">Search</button>
+            </div>
+        </form>
+        <div id="searchInfo" class="info"></div>
+    </section>
+
+    <section class="section">
+        <div class="section__header">
+            <h2>Results</h2>
+            <div class="section__actions">
+                <button id="exportCsvBtn" class="btn btn-secondary">Export CSV</button>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table id="resultTable">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Subject</th>
+                    <th>Year</th>
+                    <th>Semester</th>
+                    <th>Status</th>
+                    <th>File Name</th>
+                    <th>Send</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<footer class="app-footer">
+    <div class="container">
+        <p>Tip: Use precise subject names for better results.</p>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</footer>
+
+<div id="emailModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span id="closeModal" class="close">&times;</span>
+        <h2>Send Paper to Email</h2>
+        <form id="emailSendForm">
+            <input type="email" id="recipientEmail" placeholder="Recipient Email" required style="width:100%;padding:8px;margin-bottom:10px;">
+            <input type="hidden" id="sendFileName">
+            <button id="sendEmailBtn" type="submit" class="btn btn-primary">Send</button>
+        </form>
+        <div id="emailModalInfo" class="info"></div>
+    </div>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>

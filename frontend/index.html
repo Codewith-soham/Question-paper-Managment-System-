@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Question Paper Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:,">
+    <meta name="theme-color" content="#273c75">
+    <meta name="color-scheme" content="light dark">
+    <meta name="description" content="Dashboard for Question Paper Management System">
+</head>
+<body>
+<header class="app-header">
+    <div class="app-header__inner container">
+        <h1 class="app-title">Question Paper Management</h1>
+        <nav class="app-nav">
+            <a class="nav-link" href="index.html">Dashboard</a>
+            <a class="nav-link" href="add.html">Add Paper</a>
+            <a class="nav-link" href="search.html">Search</a>
+            <a class="nav-link" href="#all-papers">View All</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container">
+    <section class="intro">
+        <h2>Welcome</h2>
+        <p>Manage your question papers: add new entries, search by subject/year/semester, and browse all records.</p>
+    </section>
+
+    <section class="quick-actions">
+        <div class="card-grid">
+            <a class="card" href="add.html">
+                <div class="card__icon">➕</div>
+                <div class="card__content">
+                    <h3 class="card__title">Add Paper</h3>
+                    <p class="card__desc">Create a new question paper entry.</p>
+                </div>
+            </a>
+            <a class="card" href="search.html">
+                <div class="card__icon">🔎</div>
+                <div class="card__content">
+                    <h3 class="card__title">Search</h3>
+                    <p class="card__desc">Find papers by filters.</p>
+                </div>
+            </a>
+            <a class="card" href="#all-papers">
+                <div class="card__icon">📄</div>
+                <div class="card__content">
+                    <h3 class="card__title">View All</h3>
+                    <p class="card__desc">Browse the full list.</p>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <section id="all-papers" class="section">
+        <div class="section__header">
+            <h2>All Papers</h2>
+            <div class="section__actions">
+                <button id="refreshAllBtn" class="btn btn-secondary">Refresh</button>
+            </div>
+        </div>
+        <div id="allPapersInfo" class="info"></div>
+        <div class="table-wrapper">
+            <table id="allPapersTable">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Subject</th>
+                    <th>Year</th>
+                    <th>Semester</th>
+                    <th>Status</th>
+                    <th>File</th>
+                    <th>Send</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <div id="emailModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span id="closeModal" class="close">&times;</span>
+            <h2>Send Paper to Email</h2>
+            <form id="emailSendForm">
+                <input type="email" id="recipientEmail" placeholder="Recipient Email" required style="width:100%;padding:8px;margin-bottom:10px;">
+                <input type="hidden" id="paperId">
+                <button id="sendEmailBtn" type="submit" class="btn btn-primary">Send</button>
+            </form>
+            <div id="emailModalInfo" class="info"></div>
+        </div>
+    </div>
+</main>
+
+<footer class="app-footer">
+    <div class="container">
+        <p>© <span id="yearNow"></span> Question Paper Management System</p>
+    </div>
+    <button id="backToTop" class="back-to-top" title="Back to top">↑</button>
+    <button id="themeToggle" class="theme-toggle" title="Toggle theme">🌓</button>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
