@@ -69,16 +69,43 @@ public class QuestionPaperDAO {
         return list;
     }
 
-    public void deletePaper(int id) {
-        String query = "DELETE FROM question_paper WHERE id=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setInt(1, id);
-            int rows = ps.executeUpdate();
-            if (rows > 0) System.out.println("🗑️ Record deleted successfully!");
-            else System.out.println("No record found with ID " + id);
+    public void deletePaper(int id) throws RuntimeException {
+        String selectQuery = "SELECT file_path FROM question_paper WHERE id=?";
+        String deleteQuery = "DELETE FROM question_paper WHERE id=?";
+        String filePath = null;
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            // First, get the file path
+            try (PreparedStatement ps = conn.prepareStatement(selectQuery)) {
+                ps.setInt(1, id);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    filePath = rs.getString("file_path");
+                }
+            }
+            // Then delete the record
+            try (PreparedStatement ps = conn.prepareStatement(deleteQuery)) {
+                ps.setInt(1, id);
+                int rows = ps.executeUpdate();
+                if (rows == 0) {
+                    throw new RuntimeException("No record found with ID " + id);
+                }
+                System.out.println("🗑️ Record deleted successfully!");
+                // Delete the associated PDF file if it exists
+                if (filePath != null) {
+                    java.io.File file = new java.io.File("PDF", filePath);
+                    if (file.exists()) {
+                        boolean deleted = file.delete();
+                        if (deleted) {
+                            System.out.println("Associated PDF file deleted: " + filePath);
+                        } else {
+                            System.out.println("Failed to delete PDF file: " + filePath);
+                        }
+                    }
+                }
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Database error during delete: " + e.getMessage());
+            throw new RuntimeException("Failed to delete paper", e);
         }
     }
 }

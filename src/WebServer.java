@@ -23,6 +23,8 @@ public class WebServer {
         
         // Serve static files from frontend directory
         server.createContext("/frontend", staticFileHandler());
+        // Serve PDF files from project PDF directory
+        server.createContext("/pdf", pdfFileHandler());
         
     // Handle /papers routing (list, add, send email)
     server.createContext("/papers", routePapersHandler());
@@ -39,6 +41,73 @@ public class WebServer {
                 sendResponse(exchange, 200, response);
             } else {
                 sendResponse(exchange, 405, "Method not allowed");
+            }
+        };
+    }
+
+    private static HttpHandler pdfFileHandler() {
+        return exchange -> {
+            if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(405, -1);
+                return;
+            }
+
+            try {
+                String requestPath = exchange.getRequestURI().getPath(); // e.g. /pdf/filename.pdf
+                String fileName = requestPath.substring("/pdf".length());
+                if (fileName.isEmpty() || "/".equals(fileName)) {
+                    exchange.sendResponseHeaders(400, -1);
+                    return;
+                }
+
+                // Normalize and ensure we only serve by filename to prevent path traversal
+                fileName = fileName.replace("\\", "/");
+                if (fileName.startsWith("/")) fileName = fileName.substring(1);
+                int slash = fileName.lastIndexOf('/');
+                if (slash != -1) fileName = fileName.substring(slash + 1);
+
+                // Candidate locations for PDF directory (project root vs running from src/)
+                String userDir = System.getProperty("user.dir");
+                File[] candidates = new File[] {
+                    new File(userDir + File.separator + "PDF" + File.separator + fileName),
+                    new File(userDir + File.separator + ".." + File.separator + "PDF" + File.separator + fileName),
+                    new File("PDF" + File.separator + fileName)
+                };
+
+                File pdfFile = null;
+                for (File f : candidates) {
+                    if (f.exists() && f.isFile()) { pdfFile = f; break; }
+                }
+
+                if (pdfFile == null) {
+                    String notFound = "PDF not found";
+                    exchange.sendResponseHeaders(404, notFound.length());
+                    try (OutputStream os = exchange.getResponseBody()) {
+                        os.write(notFound.getBytes(StandardCharsets.UTF_8));
+                    }
+                    return;
+                }
+
+                // Serve inline as application/pdf
+                exchange.getResponseHeaders().set("Content-Type", "application/pdf");
+                exchange.getResponseHeaders().set("Content-Disposition", "inline; filename=\"" + fileName + "\"");
+                exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+                exchange.sendResponseHeaders(200, pdfFile.length());
+                try (FileInputStream fs = new FileInputStream(pdfFile);
+                     OutputStream os = exchange.getResponseBody()) {
+                    byte[] buffer = new byte[8192];
+                    int count;
+                    while ((count = fs.read(buffer)) != -1) {
+                        os.write(buffer, 0, count);
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                String response = "Internal Server Error";
+                exchange.sendResponseHeaders(500, response.length());
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(response.getBytes(StandardCharsets.UTF_8));
+                }
             }
         };
     }
@@ -175,6 +244,35 @@ public class WebServer {
                     return;
                 }
 
+                // GET /papers/search?subject=...&year=...&semester=...
+                if ("GET".equalsIgnoreCase(method) && path.equals("/papers/search")) {
+                    String query = exchange.getRequestURI().getQuery();
+                    Map<String, String> params = new HashMap<>();
+                    if (query != null && !query.isEmpty()) {
+                        for (String kv : query.split("&")) {
+                            String[] parts = kv.split("=", 2);
+                            String key = java.net.URLDecoder.decode(parts[0], StandardCharsets.UTF_8.name());
+                            String val = parts.length == 2 ? java.net.URLDecoder.decode(parts[1], StandardCharsets.UTF_8.name()) : "";
+                            params.put(key, val);
+                        }
+                    }
+
+                    String subject = params.getOrDefault("subject", "").trim();
+                    String yearStr = params.getOrDefault("year", "").trim();
+                    String semStr = params.getOrDefault("semester", "").trim();
+
+                    if (subject.isEmpty() || yearStr.isEmpty() || semStr.isEmpty()) {
+                        sendResponse(exchange, 400, "{\"error\": \"subject, year, and semester are required\"}");
+                        return;
+                    }
+
+                    int year = Integer.parseInt(yearStr);
+                    int semester = Integer.parseInt(semStr);
+                    String response = objectMapper.writeValueAsString(service.search(subject, year, semester));
+                    sendResponse(exchange, 200, response);
+                    return;
+                }
+
                 // POST /papers/{id}/email
                 Pattern p = Pattern.compile("^/papers/(\\d+)/email/?$");
                 java.util.regex.Matcher m = p.matcher(path);
@@ -205,6 +303,21 @@ public class WebServer {
                     boolean ok = EmailService.sendQuestionPaper(recipient, paper);
                     if (ok) sendResponse(exchange, 200, "{\"message\": \"Email sent\"}");
                     else sendResponse(exchange, 500, "{\"error\": \"Failed to send email\"}");
+                    return;
+                }
+
+                // DELETE /papers/{id} -> delete a paper
+                Pattern pDel = Pattern.compile("^/papers/(\\d+)/?$");
+                java.util.regex.Matcher mDel = pDel.matcher(path);
+                if ("DELETE".equalsIgnoreCase(method) && mDel.find()) {
+                    int id = Integer.parseInt(mDel.group(1));
+                    try {
+                        service.deletePaperById(id);
+                        sendResponse(exchange, 200, "{\"message\": \"Paper deleted\"}");
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        sendResponse(exchange, 500, "{\"error\": \"Failed to delete paper\"}");
+                    }
                     return;
                 }
 

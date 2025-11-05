@@ -56,7 +56,7 @@
             
             items.forEach(item => {
                 const tr = document.createElement('tr');
-                const fileLink = `../PDF/${encodeURIComponent(item.filePath)}`;
+                const fileLink = `/pdf/${encodeURIComponent(item.filePath)}`;
                 tr.innerHTML = `
                     <td>${item.id}</td>
                     <td>${item.subject}</td>
@@ -268,7 +268,7 @@
                 
                 results.forEach(item => {
                     const tr = document.createElement('tr');
-                    const fileLink = `../PDF/${encodeURIComponent(item.filePath)}`;
+                    const fileLink = `/pdf/${encodeURIComponent(item.filePath)}`;
                     tr.innerHTML = `
                         <td>${item.id}</td>
                         <td>${item.subject}</td>

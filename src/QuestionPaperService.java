@@ -19,6 +19,11 @@ public class QuestionPaperService {
         return dao.viewAllPapers();
     }
 
+    // Method for web interface to search papers
+    public List<QuestionPaper> search(String subject, int year, int semester) {
+        return dao.searchPaper(subject, year, semester);
+    }
+
     // Find a paper by its ID (returns null if not found)
     public QuestionPaper getPaperById(int id) {
         List<QuestionPaper> all = dao.viewAllPapers();
@@ -79,6 +84,15 @@ public class QuestionPaperService {
     public void deletePaper() {
         System.out.print("Enter ID of paper to delete: ");
         int id = sc.nextInt();
+        dao.deletePaper(id);
+    }
+
+    /**
+     * Delete a paper by id (used by WebServer API)
+     * @param id paper id to delete
+     * @throws RuntimeException if delete fails
+     */
+    public void deletePaperById(int id) throws RuntimeException {
         dao.deletePaper(id);
     }
 
